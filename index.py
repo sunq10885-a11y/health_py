@@ -22,7 +22,7 @@ class HealthRecordCreate(BaseModel):
     recordTime: Optional[str] = None
 
 # 查询
-@app.get("/healthRecords")
+@app.get("/api/healthRecords")
 def get_health_records():
     conn = get_conn()
     try:
@@ -44,7 +44,7 @@ def get_health_records():
         conn.close()
 
 # 新增
-@app.post("/healthRecords")
+@app.post("/api/healthRecords")
 def create_health_record(record: HealthRecordCreate):
     conn = get_conn()
     try:
