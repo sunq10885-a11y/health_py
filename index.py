@@ -7,7 +7,8 @@ app = FastAPI()
 
 def get_conn():
     return psycopg2.connect(
-        host="121.43.193.127",
+        # host="121.43.193.127",
+        host="127.0.0.1",
         database="postgres",
         user="postgres",
         password="950929",
@@ -27,7 +28,7 @@ def get_health_records():
     conn = get_conn()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM health_records")
+        cursor.execute("SELECT * FROM health_records ORDER BY record_time DESC")
         rows = cursor.fetchall()
 
         return [
@@ -69,6 +70,34 @@ def create_health_record(record: HealthRecordCreate):
             "temperature": row[3],
             "medication": row[4]
         }
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+class HealthRecordDelete(BaseModel):
+    id: int
+
+# 删除
+@app.post("/api/healthRecords/delete")
+def create_health_record(record:HealthRecordDelete):
+    conn = get_conn()
+    try:
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            DELETE FROM health_records
+            WHERE id = %s
+            RETURNING id, record_time, description, temperature, medication
+            """,
+            (record.id,)
+        )
+
+        conn.commit()
+
+        return True
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))

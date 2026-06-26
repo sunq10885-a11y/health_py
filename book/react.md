@@ -115,3 +115,48 @@ dispatch({
   type: 'add',
 })
 ```
+
+## react里面 如果请求了一个数据列表接口 后面我又变化他 但是发现dom没有更新 这个如何处理
+
+```ts
+const [list, setList] = useState<HealthRecord[]>([])
+
+// ❌ 错误1：直接push，原数组被改了，但引用没变
+const addItem = (newItem: HealthRecord) => {
+  list.push(newItem)
+  setList(list) // 传的还是同一个引用，React认为没变化，不重渲染！
+}
+
+// ❌ 错误2：直接改某一项的属性
+const updateItem = (id: number, newDesc: string) => {
+  const item = list.find((i) => i.id === id)
+  if (item) {
+    item.description = newDesc // 直接改了对象属性，原数组里的引用没变
+  }
+  setList(list) // 同样的问题
+}
+
+// ❌ 错误3：直接splice删除
+const removeItem = (id: number) => {
+  const index = list.findIndex((i) => i.id === id)
+  list.splice(index, 1) // mutate了原数组
+  setList(list)
+}
+
+// ✅ 新增：用展开运算符创建新数组
+const addItem = (newItem: HealthRecord) => {
+  setList([...list, newItem]);
+};
+
+// ✅ 更新某一项：用map创建新数组，里面是新对象
+const updateItem = (id: number, newDesc: string) => {
+  setList(list.map((item) => 
+    item.id === id ? { ...item, description: newDesc } : item
+  ));
+};
+
+// ✅ 删除：用filter创建新数组
+const removeItem = (id: number) => {
+  setList(list.filter((item) => item.id !== id));
+};
+```
